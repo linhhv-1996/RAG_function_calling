@@ -1,116 +1,105 @@
-# ==============================================================================
-#  This code was written by himmeow the coder.
-#  Contact: himmeow.thecoder@gmail.com
-#  Discord server: https://discord.gg/deua7trgXc
-#
-#  Feel free to use and modify this code as you see fit. 
-#  If you find it helpful, I'd appreciate a coffee!
-#  - Momo: 0374525177
-#  - Vietcombank (VCB): 1014622635
-# ==============================================================================
-
 from openai import OpenAI
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 
 import json, os 
 
-# Cấu hình API key cho OpenAI
+# Configure API key for OpenAI
 os.environ['OPENAI_API_KEY'] = "sk-..."
 client = OpenAI()
 
-# Định nghĩa hàm lấy thông tin về nhân viên
+# Define function to retrieve information about employees
 def about_employee(info):
     """
-    Cung cấp thông tin về các thành viên ban quản lý và nhân viên của công ty
+    Provides information about the company's management team and employees
     
     Args:
-        info (str): Thông tin cần tìm kiếm về nhân viên
+        info (str): Information to search about employees
     
     Returns:
-        str: Chuỗi JSON chứa thông tin về nhân viên
+        str: JSON string containing information about employees
     """
     
-    # Load cơ sở dữ liệu thông tin nhân viên
+    # Load the employee information database
     db = FAISS.load_local("openai_index\employee_index", OpenAIEmbeddings(model="text-embedding-3-large"), allow_dangerous_deserialization = True)
     
-    # Tìm kiếm thông tin tương đồng trong cơ sở dữ liệu
-    results = db.similarity_search(info, k=1)  # Lấy kết quả hàng đầu (k=1)
+    # Search for similar information in the database
+    results = db.similarity_search(info, k=1)  # Get the top result (k=1)
     
-    # Chuyển đổi kết quả thành dạng JSON
+    # Convert the results to JSON format
     docs = [{"content": doc.page_content} for doc in results]
     docs_string = json.dumps(docs, ensure_ascii=False)
 
     return docs_string
 
-# Định nghĩa hàm lấy thông tin về sản phẩm
+# Define function to retrieve information about products
 def about_products(info):
     """
-    Cung cấp thông tin về các sản phẩm đang có ở công ty
+    Provides information about the products available at the company
     
     Args:
-        info (str): Thông tin cần tìm kiếm về sản phẩm
+        info (str): Information to search about products
     
     Returns:
-        str: Chuỗi JSON chứa thông tin về sản phẩm
+        str: JSON string containing information about products
     """
     
-    # Load cơ sở dữ liệu thông tin sản phẩm
+    # Load the product information database
     db = FAISS.load_local("openai_index\products_index", OpenAIEmbeddings(model="text-embedding-3-large"), allow_dangerous_deserialization = True)
     
-    # Tìm kiếm thông tin tương đồng trong cơ sở dữ liệu
-    results = db.similarity_search(info, k=3)  # Lấy 3 kết quả hàng đầu (k=3)
+    # Search for similar information in the database
+    results = db.similarity_search(info, k=3)  # Get the top 3 results (k=3)
     
-    # Chuyển đổi kết quả thành dạng JSON
+    # Convert the results to JSON format
     docs = [{"content": doc.page_content} for doc in results]
     docs_string = json.dumps(docs, ensure_ascii=False)
 
     return docs_string
 
-# Định nghĩa hàm lấy nhận xét về sản phẩm
+# Define function to retrieve product reviews
 def reviews_search(info):
     """
-    Cung cấp đánh giá của người dùng về những sản phẩm của công ty
+    Provides user reviews of the company's products
     
     Args:
-        info (str): Thông tin cần tìm kiếm về nhận xét
+        info (str): Information to search about reviews
     
     Returns:
-        str: Chuỗi JSON chứa các nhận xét về sản phẩm
+        str: JSON string containing reviews about products
     """
     
-    # Load cơ sở dữ liệu các nhận xét sản phẩm
+    # Load the product reviews database
     db = FAISS.load_local("openai_index\\reviews_index", OpenAIEmbeddings(model="text-embedding-3-large"), allow_dangerous_deserialization = True)
     
-    # Tìm kiếm thông tin tương đồng trong cơ sở dữ liệu
-    results = db.similarity_search(info, k=5)  # Lấy 5 kết quả hàng đầu (k=5)
+    # Search for similar information in the database
+    results = db.similarity_search(info, k=5)  # Get the top 5 results (k=5)
     
-    # Chuyển đổi kết quả thành dạng JSON
+    # Convert the results to JSON format
     docs = [{"content": doc.page_content} for doc in results]
     docs_string = json.dumps(docs, ensure_ascii=False)
 
     return docs_string
 
-# Danh sách các hàm có sẵn cho trợ lý ảo
+# List of functions available for the virtual assistant
 available_functions = {
     "about_employee": about_employee,
     "about_products": about_products,
     "reviews_search": reviews_search
 }
 
-# Định nghĩa các công cụ (tools) cho trợ lý ảo
+# Define tools for the virtual assistant
 tools = [
     {
         "type": "function",
         "function": {
             "name": "about_employee",
-            "description": "Cung cấp những tài liệu liên quan đến người quản lý/nhân viên của công ty mà bạn cần biết.",
+            "description": "Provides information about the company's management team and employees that you need to know.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "info": {
                         "type": "string",
-                        "description": "Thông tin mà bạn cần tìm kiếm, e.g. Email của himmeow the coder.",
+                        "description": "Information you need to search, e.g., Email of himmeow the coder.",
                     },
                 },
                 "required": ["info"],
@@ -121,13 +110,13 @@ tools = [
         "type": "function",
         "function": {
             "name": "about_products",
-            "description": "Cung cấp những tài liệu liên quan đến sản phẩm của công ty mà bạn cần biết.",
+            "description": "Provides information about the company's products that you need to know.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "info": {
                         "type": "string",
-                        "description": "Thông tin mà bạn cần tìm kiếm, e.g. Xuất xứ của áo phông nam Luôn Vui Tươi.",
+                        "description": "Information you need to search, e.g., Origin of the Luon Vui Tươi men's T-shirt.",
                     },
                 },
                 "required": ["info"],
@@ -138,13 +127,13 @@ tools = [
         "type": "function",
         "function": {
             "name": "reviews_search",
-            "description": "Cung cấp những lời nhận xét về các sản phẩm của công ty.",
+            "description": "Provides reviews about the company's products.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "info": {
                         "type": "string",
-                        "description": "Những nhận xét mà bạn cần tìm kiếm, e.g. Nhận xét của người dùng về sản phẩm áo phông nam.",
+                        "description": "Reviews you need to search, e.g., User reviews of the men's T-shirt.",
                     },
                 },
                 "required": ["info"],
@@ -153,31 +142,31 @@ tools = [
     },
 ]
 
-# Bộ nhớ của trợ lý ảo, chứa lịch sử trò chuyện
+# Memory of the virtual assistant, containing conversation history
 memory = [
     {
         "role": "system", 
-        "content": """Bạn là trợ lý ảo thông minh làm việc cho một công ty buôn bán hàng hóa, được cung cấp những công cụ truy xuất dữ liệu để trả lời câu hỏi của người dùng. \n
-                     IMPORTANT: LUÔN LUÔN PHẢI tìm thông tin trong các tài liệu bằng tools được cung cấp trước khi trả lời câu hỏi của người dùng!"""
+        "content": """You are an intelligent virtual assistant working for a merchandise company, provided with tools to retrieve data to answer user questions. \n
+                     IMPORTANT: ALWAYS search for information in the provided tools before answering user questions!"""
     },
 ]
 
-# Hàm gửi yêu cầu trò chuyện và xử lý phản hồi
+# Function to send a chat request and handle responses
 def chat_completion_request(messages, functions=None, model="gpt-4o"):
     """
-    Gửi yêu cầu trò chuyện đến OpenAI API và xử lý phản hồi.
+    Sends a chat request to the OpenAI API and handles the response.
     
     Args:
-        messages (list): Danh sách tin nhắn trong cuộc trò chuyện.
-        functions (list): Danh sách các công cụ có sẵn cho trợ lý ảo.
-        model (str): Mô hình ngôn ngữ được sử dụng cho chatbot.
+        messages (list): List of messages in the conversation.
+        functions (list): List of tools available for the virtual assistant.
+        model (str): Language model used for the chatbot.
     
     Returns:
-        str: Phản hồi từ chatbot hoặc thông báo lỗi.
+        str: Response from the chatbot or error message.
     """
     
     try:
-        # Gửi yêu cầu trò chuyện
+        # Send the chat request
         response = client.chat.completions.create(
             model=model,
             messages=messages,
@@ -186,26 +175,26 @@ def chat_completion_request(messages, functions=None, model="gpt-4o"):
             temperature=0,
         )
 
-        # Lấy phản hồi từ OpenAI API
+        # Get the response from the OpenAI API
         response_message = response.choices[0].message
         tool_calls = response_message.tool_calls
 
-        # Nếu có yêu cầu sử dụng công cụ
+        # If there are tool calls
         if tool_calls:
-            # Thêm phản hồi của chatbot vào bộ nhớ
+            # Add the chatbot's response to memory
             messages.append(response_message)
 
-            # Xử lý từng yêu cầu sử dụng công cụ
+            # Process each tool call
             for tool_call in tool_calls:
                 function_name = tool_call.function.name
                 
-                # Gọi hàm tương ứng với tên công cụ được yêu cầu
+                # Call the function corresponding to the requested tool name
                 if function_name in available_functions:
                     function_to_call = available_functions[function_name]
                     function_args = json.loads(tool_call.function.arguments)
                     function_response = function_to_call(function_args.get("info"))
                     
-                    # Thêm kết quả của công cụ vào bộ nhớ
+                    # Add the tool's result to memory
                     messages.append(
                         {
                             "tool_call_id": tool_call.id,
@@ -215,10 +204,10 @@ def chat_completion_request(messages, functions=None, model="gpt-4o"):
                         }
                     )
                 
-            # Gửi yêu cầu trò chuyện mới với thông tin bổ sung từ công cụ
+            # Send a new chat request with additional information from the tool
             return chat_completion_request(messages=messages, functions=functions)
             
-        # Nếu không có yêu cầu sử dụng công cụ, trả về phản hồi trực tiếp
+        # If no tool calls, return the direct response
         else:
             msg = response_message.content
             return msg
@@ -228,22 +217,22 @@ def chat_completion_request(messages, functions=None, model="gpt-4o"):
         print(f"Exception: {e}")
         return e
     
-# Chạy chatbot
+# Run the chatbot
 if __name__ == "__main__":
-    print("Bắt đầu trò chuyện với trợ lý ảo (nhập 'exit' để dừng)")
+    print("Start chatting with the virtual assistant (type 'exit' to stop)")
     while True:
         query = input("User: ")
         if query.lower() == "exit":
             break
 
-        # Thêm câu hỏi của người dùng vào bộ nhớ
+        # Add the user's question to memory
         memory.append({"role": "user", "content": query})
         
-        # Gửi yêu cầu trò chuyện và nhận phản hồi
+        # Send a chat request and receive a response
         response = chat_completion_request(messages=memory, functions=tools)
         
-        # In phản hồi của chatbot
+        # Print the chatbot's response
         print(f"Chatbot: {response}")
         
-        # Thêm phản hồi của chatbot vào bộ nhớ
+        # Add the chatbot's response to memory
         memory.append({"role": "assistant", "content": response})
